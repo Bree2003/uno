@@ -1,0 +1,69 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --mindsight-main: #cbbae9;
+  --mindsight-main-secondary: #e5dafa;
+  --mindsight-main-tertiary: #c0a9f9;
+  --mindsight-accent: #823aef;
+  --mindsight-accent-secondary: #6c577c;
+  --mindsight-gradient: linear-gradient(to right, #823aef 0%, #cb6ce6 100%);
+}
+
+.bg-mindsight-gradient {
+  background-image: var(--mindsight-gradient);
+}
+
+.bg-mindsight-main {
+  background-color: var(--mindsight-main);
+}
+
+.bg-mindsight-main-secondary {
+  background-color: var(--mindsight-main-secondary);
+}
+
+.bg-mindsight-main-tertiary {
+  background-color: var(--mindsight-main-tertiary);
+}
+
+.bg-mindsight-accent {
+  background-color: var(--mindsight-accent);
+}
+
+.bg-mindsight-accent-secondary {
+  background-color: var(--mindsight-accent-secondary);
+}
+
+.border-mindsight-accent {
+  border: 3px solid var(--mindsight-accent);
+}
+
+.text-mindsight-accent {
+  color: var(--mindsight-accent);
+}
+
+.text-mindsight-accent-secondary {
+  color: var(--mindsight-accent-secondary);
+}
+
+/* === BOTONES MINDSIGHT === */
+
+/* Botón principal (Android) */
+.button-mindsight-main {
+  @apply flex items-center justify-center gap-2 w-full sm:w-auto 
+         rounded-full px-8 py-4 text-lg font-semibold text-white 
+         shadow-md transition-all duration-300 
+         hover:scale-105 hover:shadow-lg;
+  background-image: var(--mindsight-gradient);
+}
+
+/* Botón secundario (iOS) */
+.button-mindsight-secondary {
+  @apply flex items-center justify-center gap-2 w-full sm:w-auto 
+         rounded-full border-2 px-8 py-4 text-lg font-semibold 
+         bg-white shadow-sm transition-all duration-300 
+         hover:scale-105 hover:shadow-md;
+  color: var(--mindsight-accent);
+  border-color: var(--mindsight-accent);
+}
