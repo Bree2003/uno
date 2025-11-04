@@ -8,19 +8,21 @@ import TeamSection from '@/components/screens/TeamSection';
 import Header from '@/components/Header';
 import CTASection from '@/components/screens/CTASection';
 import VideoSection from '@/components/screens/VideoSection';
+import ProblemSection from '@/components/screens/ProblemSection';
 
 const Landing = () => {
   return (
     <>
       <HeroSection />
       <Header />
+      <ProblemSection/>
       <AboutSection />
       <VideoSection />
-      <CTASection />
       <BenefitSection />
       <Ecosystem />
       <SleepBoookSection />
-      <TeamSection />
+      <CTASection />
+      {/* <TeamSection /> */}
     </>
   );
 };

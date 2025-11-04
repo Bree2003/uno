@@ -8,7 +8,7 @@ import { HoverEffect3D } from '@/components/old/ui/animated/3d-hover-effect';
 
 const AboutSection = () => {
   return (
-    <section className="relative bg-white p-10">
+    <section className="relative bg-white p-10" id='comunidad'>
       <div className="container mx-auto flex flex-col items-center justify-center gap-16 px-6 md:flex-row md:items-center md:justify-between">
         <div className="relative flex w-full justify-center md:w-1/2">
           <OnScrollRevealDiv direction="left">
@@ -28,7 +28,7 @@ const AboutSection = () => {
         </div>
         <div className="md:w-1/2">
           <OnScrollRevealDiv className="mb-8" direction="right">
-            <TitleSection textTitle="Sobre Mindsight" />
+            <TitleSection textTitle="Por eso creamos Mindsight" />
           </OnScrollRevealDiv>
           <OnScrollRevealDiv direction="right">
             <p className="mb-4 text-xl leading-relaxed text-gray-600">
@@ -49,35 +49,6 @@ const AboutSection = () => {
               bienestar, y en Mindsight estamos aquí para ayudarte a alcanzar su máximo
               potencial.
             </p>
-          </OnScrollRevealDiv>
-          <OnScrollRevealDiv direction="right">
-            <div className="flex items-center gap-4">
-              <button className="bg-mindsight-accent rounded-xl p-3">
-                <a
-                  href="https://play.google.com/store/apps/details?id=com.mindsight.mnemosine"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center font-semibold text-white"
-                >
-                  <FaGooglePlay className="mr-2 size-6 shrink-0 lg:size-8" />
-                  Descarga nuestra App!
-                </a>
-              </button>
-              <span className="text-xl font-semibold leading-relaxed text-gray-600">
-                &
-              </span>
-              <button className="bg-mindsight-accent rounded-xl p-3">
-                <a
-                  href="https://chat.whatsapp.com/LWJYo6EDJVA37ZmyZ8HRk3"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center font-semibold text-white"
-                >
-                  <FaWhatsapp className="mr-2 size-6 shrink-0 lg:size-8" />
-                  Únete a nuestra comunidad!
-                </a>
-              </button>
-            </div>
           </OnScrollRevealDiv>
         </div>
       </div>

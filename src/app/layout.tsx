@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import '@/styles/globals.css';
-import { raleway } from './fonts';
+import { nunitoSans } from './fonts';
 import { cn } from '@/utils/cn';
 
 export const metadata: Metadata = {
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 const RootLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <html lang="es">
-      <body className={cn(raleway.className, 'w-full')}>
+      <body className={cn(nunitoSans.className, 'w-full')}>
         <main className="bg-mindsight-main w-full overflow-x-clip">{children}</main>
       </body>
     </html>
