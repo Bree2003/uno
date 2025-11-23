@@ -1,0 +1,43 @@
+name: Deploy Gradio App to Cloud Run
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣ Clonar repo
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2️⃣ Autenticación con Google Cloud (usando secret del service account)
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      # 3️⃣ Configurar CLI de gcloud
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      # 4️⃣ Build & Push a Artifact Registry
+      - name: Build Docker image
+        run: |
+          gcloud builds submit \
+            --tag us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/prueba-gradio/gradio-app
+
+      # 5️⃣ Desplegar a Cloud Run
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy gradio-app \
+            --image us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/prueba-gradio/gradio-app \
+            --platform managed \
+            --region us-central1 \
+            --allow-unauthenticated \
+            --port 8080
