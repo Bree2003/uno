@@ -1,10 +1,20 @@
-FROM python:3.10-slim
+# Usa Node como base image
+FROM node:14-alpine
 
+# Establece el directorio de trabajo
 WORKDIR /app
 
-COPY requirements.txt requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+# Copia los archivos necesarios
+COPY package.json package-lock.json ./
 
+# Instala las dependencias con npm
+RUN npm ci
+
+# Copia el resto de los archivos
 COPY . .
 
-CMD ["python", "app.py"]
+# Ejemplo: construye la aplicación React (si es necesario)
+RUN npm run build
+
+# Ejemplo: comando para iniciar la aplicación
+CMD ["npm", "start"]
