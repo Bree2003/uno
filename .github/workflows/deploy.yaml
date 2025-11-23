@@ -10,34 +10,45 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Clonar repo
+      # 1️⃣ Checkout repo
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      # 2️⃣ Autenticación con Google Cloud (usando secret del service account)
+      # 2️⃣ Auth to Google Cloud (service account via secret)
       - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
+        uses: google-github-actions/auth@v1
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-      # 3️⃣ Configurar CLI de gcloud
+      # 3️⃣ Install gcloud SDK
       - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v2
+        uses: google-github-actions/setup-gcloud@v1
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-      # 4️⃣ Build & Push a Artifact Registry
+      # 4️⃣ Build Docker image locally (sin Cloud Build!)
       - name: Build Docker image
         run: |
-          gcloud builds submit \
-            --tag us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/prueba-gradio/gradio-app
+          docker build \
+            -t us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/gradio-app/gradio-app:latest \
+            .
 
-      # 5️⃣ Desplegar a Cloud Run
+      # 5️⃣ Configure Docker auth for Artifact Registry
+      - name: Configure Docker for Google Artifact Registry
+        run: |
+          gcloud auth configure-docker us-central1-docker.pkg.dev
+
+      # 6️⃣ Push Docker image to Artifact Registry
+      - name: Push Docker image
+        run: |
+          docker push us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/gradio-app/gradio-app:latest
+
+      # 7️⃣ Deploy to Cloud Run
       - name: Deploy to Cloud Run
         run: |
           gcloud run deploy gradio-app \
-            --image us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/prueba-gradio/gradio-app \
-            --platform managed \
+            --image us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/gradio-app/gradio-app:latest \
             --region us-central1 \
+            --platform managed \
             --allow-unauthenticated \
             --port 8080
