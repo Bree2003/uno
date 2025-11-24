@@ -2,7 +2,9 @@
   margin: 0;
 }
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
@@ -24,14 +26,6 @@
   }
 }
 
-.App-background {
-  background-image: url('/images/background-login.png');
-  background-size: cover;
-  background-repeat: no-repeat;
-  background-position: center center;
-  background-attachment: fixed;
-}
-
 .App-link {
   color: #61dafb;
 }
@@ -50,6 +44,6 @@
   font-size: 14px;
   font-weight: 500;
   line-height: 22.4px;
-  text-align: left;    
+  text-align: left;
   color: rgba(59, 113, 202, 1);
 }

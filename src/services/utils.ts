@@ -26,86 +26,132 @@ const connectAxios = (axiosObj: AxiosInstance): AxiosInstance => {
   return MockApi(axiosObj, false);
 };
 
-export const AxiosGet = async (
-  uri: string,
-  params: {} = {}
-): Promise<AxiosResponse> => {
-  const options = (): AxiosRequestConfig => {
-    return {
-      responseType: "json",
-      headers: getHeadersRequests(),
-      params: stringify(params),
-      validateStatus: () => true,
-      timeout: 1200000,
-    };
+// HEADERS
+export const getBasicHeadersRequests = () => {
+  return { "Content-Type": "application/json" };
+};
+
+export const getHeadersRequests = () => {
+  const token = getOnSessionStorage("accessToken");
+  return {
+    Authorization: `Bearer ${token?.toString()}`,
+    "Content-Type": "application/json",
   };
+};
+
+// --- HTTP METHODS ---
+
+export const AxiosGet = async (uri: string, params: {} = {}): Promise<AxiosResponse> => {
+  const options = (): AxiosRequestConfig => ({
+    responseType: "json",
+    headers: getHeadersRequests(),
+    params: params,
+    validateStatus: () => true,
+    timeout: 1200000,
+  });
+  
   return await connectAxios(axios)
-    .get(process.env.REACT_APP_BACKEND_URL + uri + `-${ENV}`, options())
-    .then((response) => {
-      return {
-        status: response.status,
-        data: response.data,
-      };
-    })
-    .catch(function (error) {
+    .get(process.env.REACT_APP_BACKEND_URL + uri, options())
+    .then((response) => ({ status: response.status, data: response.data }))
+    .catch((error) => {
       console.log(error);
-      return {
-        status: error.status,
-        data: error.message,
-      };
+      return { status: error.status, data: error.message };
     });
 };
 
 export const AxiosPost = (uri: string, body: {}): Promise<AxiosResponse> => {
   return connectAxios(axios)
-    .post(process.env.REACT_APP_BACKEND_URL + uri + `-${ENV}`, body, {
+    .post(process.env.REACT_APP_BACKEND_URL + uri, body, {
       headers: getHeadersRequests(),
       validateStatus: () => true,
       timeout: 1200000,
     })
-    .then((response) => {
-      return {
-        status: response.status,
-        data: response.data,
-      };
-    })
-    .catch(function (error) {
+    .then((response) => ({ status: response.status, data: response.data }))
+    .catch((error) => {
       console.log(error);
-      return {
-        status: error.status,
-        data: error.message,
-      };
+      return { status: error.status, data: error.message };
     });
 };
 
-export const AxiosURLGet = async (
-  uri: string,
-  params: {} = {},
-  includeAuth: boolean = true,
+/**
+ * NUEVO: Necesario para el endpoint /analyze.
+ * Permite enviar FormData (archivos) al backend.
+ * Nota: No seteamos 'Content-Type' manualmente, el navegador lo hace 
+ * para incluir el 'boundary' correcto.
+ */
+export const AxiosPostForm = (
+  uri: string, 
+  formData: FormData, 
+  config: AxiosRequestConfig = {} // <--- 1. Agregamos esto
 ): Promise<AxiosResponse> => {
-  const options = (): AxiosRequestConfig => {
-    return {
-      responseType: "json",
-      headers: includeAuth ? getHeadersRequests() : getBasicHeadersRequests(),
-      params: stringify(params),
+  
+  const token = getOnSessionStorage("accessToken");
+  
+  const headers = {
+    Authorization: `Bearer ${token?.toString()}`,
+    // Mantenemos sin Content-Type para que el navegador ponga el boundary
+  };
+
+  return connectAxios(axios)
+    .post(process.env.REACT_APP_BACKEND_URL + uri, formData, {
+      headers: headers, 
       validateStatus: () => true,
       timeout: 1200000,
-    };
-  };
+      ...config, // <--- 2. Inyectamos la config (aquí viene el onUploadProgress)
+    })
+    .then((response) => ({ status: response.status, data: response.data }))
+    .catch((error) => {
+      console.log(error);
+      return { status: error.status || 500, data: error.message };
+    });
+};
+
+export const AxiosPut = (uri: string, body: {}): Promise<AxiosResponse> => {
+  return connectAxios(axios)
+    .put(process.env.REACT_APP_BACKEND_URL + uri, body, {
+      headers: getHeadersRequests(),
+      validateStatus: () => true,
+      timeout: 1200000,
+    })
+    .then((response) => ({ status: response.status, data: response.data }))
+    .catch((error) => {
+      console.log(error);
+      return { status: error.status, data: error.message };
+    });
+};
+
+export const AxiosDelete = (uri: string, body: {}): Promise<AxiosResponse> => {
+  return connectAxios(axios)
+    .delete(process.env.REACT_APP_BACKEND_URL + uri, {
+      data: body,
+      headers: getHeadersRequests(),
+      validateStatus: () => true,
+      timeout: 1200000,
+    })
+    .then((response) => ({ status: response.status, data: response.data }))
+    .catch((error) => {
+      console.log(error);
+      return { status: error.status, data: error.message };
+    });
+};
+
+// --- URL METHODS (FULL URL / EXTERNAL) ---
+
+export const AxiosURLGet = async (uri: string, params: {} = {}, includeAuth: boolean = true): Promise<AxiosResponse> => {
+  const options = (): AxiosRequestConfig => ({
+    responseType: "json",
+    headers: includeAuth ? getHeadersRequests() : getBasicHeadersRequests(),
+    params: stringify(params),
+    validateStatus: () => true,
+    timeout: 1200000,
+  });
+
   return await connectAxios(axios)
     .get(uri, options())
-    .then((response) => {
-      return {
-        status: response.status,
-        data: response.data,
-      };
-    })
-    .catch(function (error) {
+    .then((response) => ({ status: response.status, data: response.data }))
+    .catch((error) => {
       console.log(error);
-      return {
-        status: error.status,
-        data: error.message,
-      };
+      return { status: error.status, data: error.message };
     });
 };
 
@@ -116,105 +162,57 @@ export const AxiosURLPost = (uri: string, body: {}, includeAuth: boolean = true)
       validateStatus: () => true,
       timeout: 1200000,
     })
-    .then((response) => {
-      return {
-        status: response.status,
-        data: response.data,
-      };
-    })
-    .catch(function (error) {
+    .then((response) => ({ status: response.status, data: response.data }))
+    .catch((error) => {
       console.log(error);
-      return {
-        status: error.status,
-        data: error.message,
-      };
+      return { status: error.status, data: error.message };
     });
 };
 
-export const AxiosDownload = (
-  uri: string, 
-  body: {}, 
-  config?: {} // Nuevo argumento opcional para configuraciones adicionales
+/**
+ * GENÉRICO Y POTENTE: Usar para subida a GCS.
+ * Permite pasar `onUploadProgress` en el config para pintar la barra de carga.
+ * includeAuth = false para GCS.
+ */
+export const AxiosURLPut = (
+  uri: string,
+  body: any,
+  config: AxiosRequestConfig = {}, 
+  includeAuth: boolean = false
 ): Promise<AxiosResponse> => {
-  return connectAxios(axios)
-    .post(process.env.REACT_APP_BACKEND_URL + uri + `-${ENV}`, body, {
-      headers: getHeadersRequests(),
-      validateStatus: () => true,
-      timeout: 1200000,
-      ...config, // Fusiona las configuraciones adicionales si se proporcionan
-    })
-    .then((response) => {
-      return {
-        status: response.status,
-        data: response.data,
-      };
-    })
-    .catch(function (error) {
-      console.log(error);
-      return {
-        status: error.status,
-        data: error.message,
-      };
-    });
-};
+  
+  const baseHeaders = includeAuth ? getHeadersRequests() : getBasicHeadersRequests();
 
-export const AxiosPut = (uri: string, body: {}): Promise<AxiosResponse> => {
-  return connectAxios(axios)
-    .put(process.env.REACT_APP_BACKEND_URL + uri + `-${ENV}`, body, {
-      headers: getHeadersRequests(),
-      validateStatus: () => true,
-      timeout: 1200000,
-    })
-    .then((response) => {
-      return {
-        status: response.status,
-        data: response.data,
-      };
-    })
-    .catch(function (error) {
-      console.log(error);
-      return {
-        status: error.status,
-        data: error.message,
-      };
-    });
-};
-
-export const AxiosDelete = (uri: string, body: {}): Promise<AxiosResponse> => {
-  return connectAxios(axios)
-    .delete(process.env.REACT_APP_BACKEND_URL + uri + `-${ENV}`, {
-      data: body,
-      headers: getHeadersRequests(),
-      validateStatus: () => true,
-      timeout: 1200000,
-    })
-    .then((response) => {
-      return {
-        status: response.status,
-        data: response.data,
-      };
-    })
-    .catch(function (error) {
-      console.log(error);
-      return {
-        status: error.status,
-        data: error.message,
-      };
-    });
-};
-
-export const getBasicHeadersRequests = () => {
-  const optionsHeaders = {
-    "Content-Type": "application/json",
+  const finalConfig: AxiosRequestConfig = {
+    validateStatus: () => true,
+    timeout: 0, // Sin timeout para archivos grandes
+    ...config, // Aquí inyectamos el onUploadProgress
+    headers: {
+      ...baseHeaders,
+      ...config.headers, 
+    },
   };
-  return optionsHeaders;
+
+  return connectAxios(axios)
+    .put(uri, body, finalConfig)
+    .then((response) => ({ status: response.status, data: response.data }))
+    .catch((error) => {
+      console.log(error);
+      return { status: error.status || 500, data: error.message };
+    });
 };
 
-export const getHeadersRequests = () => {
-  const token = getOnSessionStorage("accessToken");
-  const optionsHeaders = {
-    Authorization: `Bearer ${token.toString()}`,
-    "Content-Type": "application/json",
-  };
-  return optionsHeaders;
+export const AxiosDownload = (uri: string, body: {}, config?: {}): Promise<AxiosResponse> => {
+  return connectAxios(axios)
+    .post(process.env.REACT_APP_BACKEND_URL + uri, body, {
+      headers: getHeadersRequests(),
+      validateStatus: () => true,
+      timeout: 1200000,
+      ...config,
+    })
+    .then((response) => ({ status: response.status, data: response.data }))
+    .catch((error) => {
+      console.log(error);
+      return { status: error.status, data: error.message };
+    });
 };
