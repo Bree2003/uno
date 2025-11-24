@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión - Plataforma de Datos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    
+    <style>
+        :root {
+            --primary-orange: #FF5B35;
+            --primary-orange-hover: #E04824;
+            --text-main: #111827;
+            --text-secondary: #6B7280;
+            --border-color: #E5E7EB;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+
+        body { height: 100vh; overflow: hidden; display: flex; }
+
+        /* --- LADO IZQUIERDO (BRANDING) --- */
+        .brand-section {
+            flex: 1;
+            background-color: #111827; /* Gris casi negro, elegante */
+            /* Simulamos una imagen de fondo de viñedos oscurecida */
+            background-image: linear-gradient(rgba(17, 24, 39, 0.7), rgba(17, 24, 39, 0.8)), 
+                              url('https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?q=80&w=2070&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 60px;
+            color: white;
+            position: relative;
+        }
+
+        .brand-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand-quote { max-width: 500px; margin-bottom: 40px; }
+        .quote-text { font-size: 1.8rem; font-weight: 600; line-height: 1.4; margin-bottom: 20px; }
+        .quote-author { font-size: 1rem; opacity: 0.8; }
+
+        /* --- LADO DERECHO (FORMULARIO) --- */
+        .form-section {
+            width: 50%;
+            max-width: 600px;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .login-card { width: 100%; max-width: 400px; }
+
+        .header-text { margin-bottom: 30px; }
+        .header-text h1 { font-size: 1.8rem; font-weight: 700; color: var(--text-main); margin-bottom: 8px; }
+        .header-text p { color: var(--text-secondary); font-size: 0.95rem; }
+
+        /* Inputs */
+        .form-group { margin-bottom: 20px; }
+        .label { display: block; font-size: 0.9rem; font-weight: 500; color: var(--text-main); margin-bottom: 8px; }
+        
+        .input-wrapper { position: relative; }
+        .input-field {
+            width: 100%;
+            padding: 12px 12px 12px 40px; /* Espacio para icono */
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            outline: none;
+        }
+        .input-field:focus {
+            border-color: var(--primary-orange);
+            box-shadow: 0 0 0 3px rgba(255, 91, 53, 0.1);
+        }
+        
+        .input-icon {
+            position: absolute;
+            left: 12px; top: 12px;
+            color: #9CA3AF;
+            font-size: 20px;
+        }
+
+        /* Enlaces y Checkbox */
+        .form-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            font-size: 0.9rem;
+        }
+        .remember-me { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); cursor: pointer; }
+        .forgot-pass { color: var(--primary-orange); text-decoration: none; font-weight: 500; }
+        .forgot-pass:hover { text-decoration: underline; }
+
+        /* Botones */
+        .btn-primary {
+            width: 100%;
+            background: var(--primary-orange);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-bottom: 20px;
+        }
+        .btn-primary:hover { background: var(--primary-orange-hover); }
+
+        .divider {
+            display: flex; align-items: center;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-bottom: 20px;
+        }
+        .divider::before, .divider::after {
+            content: ""; flex: 1; height: 1px; background: var(--border-color);
+        }
+        .divider::before { margin-right: 10px; }
+        .divider::after { margin-left: 10px; }
+
+        .btn-sso {
+            width: 100%;
+            background: white;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            transition: all 0.2s;
+        }
+        .btn-sso:hover { background: #F9FAFB; border-color: #D1D5DB; }
+
+        /* Responsive para móviles */
+        @media (max-width: 900px) {
+            .brand-section { display: none; } /* Ocultamos la imagen en móvil */
+            .form-section { width: 100%; max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- LADO IZQUIERDO: Branding & Imagen -->
+    <div class="brand-section">
+        <div class="brand-logo">
+            <!-- Icono simulado -->
+            <div style="width: 32px; height: 32px; background: white; border-radius: 6px; display:flex; align-items:center; justify-content:center;">
+                <span style="color:#111827; font-weight:bold; font-size:1.2rem;">C</span>
+            </div>
+            <span>VIÑA CONCHA Y TORO</span>
+        </div>
+
+        <div class="brand-quote">
+            <p class="quote-text">"Transformando la vitivinicultura a través de la inteligencia de datos y la gestión eficiente."</p>
+            <p class="quote-author">Plataforma Corporativa de Datos</p>
+            
+            <!-- Indicadores de slide (decorativo) -->
+            <div style="display: flex; gap: 8px; margin-top: 20px;">
+                <div style="width: 24px; height: 4px; background: white; border-radius: 2px;"></div>
+                <div style="width: 8px; height: 4px; background: rgba(255,255,255,0.4); border-radius: 2px;"></div>
+                <div style="width: 8px; height: 4px; background: rgba(255,255,255,0.4); border-radius: 2px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LADO DERECHO: Login Form -->
+    <div class="form-section">
+        <div class="login-card">
+            
+            <div class="header-text">
+                <h1>Bienvenido de nuevo</h1>
+                <p>Ingresa tus credenciales para acceder al Data Hub.</p>
+            </div>
+
+            <form>
+                <!-- Email -->
+                <div class="form-group">
+                    <label class="label" for="email">Correo Corporativo</label>
+                    <div class="input-wrapper">
+                        <span class="material-symbols-outlined input-icon">mail</span>
+                        <input type="email" id="email" class="input-field" placeholder="nombre.apellido@conchaytoro.cl">
+                    </div>
+                </div>
+
+                <!-- Password -->
+                <div class="form-group">
+                    <label class="label" for="password">Contraseña</label>
+                    <div class="input-wrapper">
+                        <span class="material-symbols-outlined input-icon">lock</span>
+                        <input type="password" id="password" class="input-field" placeholder="••••••••">
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="form-actions">
+                    <label class="remember-me">
+                        <input type="checkbox" style="accent-color: var(--primary-orange);"> Recordarme
+                    </label>
+                    <a href="#" class="forgot-pass">¿Olvidaste tu clave?</a>
+                </div>
+
+                <!-- Botón Principal -->
+                <button type="button" class="btn-primary">Iniciar Sesión</button>
+
+                <!-- Separador -->
+                <div class="divider">o ingresa con SSO</div>
+
+                <!-- Botón SSO (Microsoft) -->
+                <button type="button" class="btn-sso">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg" alt="Microsoft" width="20">
+                    Continuar con Microsoft Account
+                </button>
+
+            </form>
+
+            <div style="margin-top: 30px; text-align: center; font-size: 0.85rem; color: var(--text-secondary);">
+                ¿Necesitas acceso? <a href="#" style="color: var(--primary-orange); font-weight: 500; text-decoration: none;">Contactar Soporte TI</a>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

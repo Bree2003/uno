@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Datos - Concha y Toro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    
+    <style>
+        :root {
+            --primary-orange: #FF5B35;
+            --primary-orange-hover: #E04824;
+            --primary-orange-light: #FFF0EB; 
+            --bg-body: #F3F4F6;
+            --bg-surface: #FFFFFF;
+            --text-main: #111827;
+            --text-secondary: #6B7280;
+            --border-color: #E5E7EB;
+            --row-hover: #F9FAFB;
+            --row-selected: #FFF7F5; /* Naranja muy pálido para selección */
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        
+        body { 
+            background-color: var(--bg-body); 
+            color: var(--text-main); 
+            padding: 40px;
+            font-size: 14px; /* Tamaño base estándar para data grids */
+        }
+
+        /* --- CONTENEDOR PRINCIPAL --- */
+        .data-grid-container {
+            background: var(--bg-surface);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-color);
+            max-width: 1400px;
+            margin: 0 auto;
+            overflow: hidden; /* Para que el header no se salga del radio */
+            position: relative;
+        }
+
+        /* --- HEADER Y TOOLBAR --- */
+        .grid-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .breadcrumb { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 4px; }
+        .grid-title { font-size: 1.5rem; font-weight: 700; color: var(--text-main); }
+
+        .toolbar {
+            padding: 12px 24px;
+            background: #F8FAFC; /* Gris muy suave para diferenciar del body */
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        /* Inputs y Filtros */
+        .search-wrapper {
+            position: relative;
+            flex-grow: 1;
+            max-width: 300px;
+        }
+        .search-wrapper span {
+            position: absolute;
+            left: 10px; top: 9px;
+            color: #9CA3AF;
+            font-size: 20px;
+        }
+        .input-control {
+            width: 100%;
+            padding: 8px 8px 8px 36px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            outline: none;
+            font-size: 0.9rem;
+            transition: border 0.2s;
+            background: white;
+        }
+        .input-control:focus { border-color: var(--primary-orange); box-shadow: 0 0 0 2px rgba(255, 91, 53, 0.1); }
+
+        .filter-btn {
+            background: white;
+            border: 1px solid var(--border-color);
+            padding: 8px 12px;
+            border-radius: 6px;
+            color: var(--text-secondary);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .filter-btn:hover { border-color: #D1D5DB; color: var(--text-main); }
+        .filter-btn.active { background: var(--primary-orange-light); border-color: var(--primary-orange); color: var(--primary-orange); }
+
+        .btn-primary {
+            background: var(--primary-orange);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .btn-primary:hover { background: var(--primary-orange-hover); }
+
+        /* --- TABLA DE DATOS --- */
+        .table-responsive { overflow-x: auto; min-height: 400px; }
+        
+        table { width: 100%; border-collapse: collapse; }
+        
+        th {
+            text-align: left;
+            padding: 12px 16px;
+            background: white;
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            border-bottom: 1px solid var(--border-color);
+            white-space: nowrap;
+        }
+        
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-main);
+            font-size: 0.9rem;
+            vertical-align: middle;
+        }
+
+        tr { transition: background 0.1s; }
+        tr:hover { background-color: var(--row-hover); }
+        tr.selected { background-color: var(--row-selected); }
+
+        /* Checkbox Custom */
+        input[type="checkbox"] {
+            accent-color: var(--primary-orange);
+            width: 16px; height: 16px;
+            cursor: pointer;
+        }
+
+        /* Botones de Acción (Iconos) */
+        .action-cell { display: flex; gap: 8px; justify-content: flex-end; opacity: 0.4; transition: opacity 0.2s; }
+        tr:hover .action-cell { opacity: 1; }
+        
+        .icon-btn {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: var(--text-secondary);
+            padding: 4px;
+            border-radius: 4px;
+        }
+        .icon-btn:hover { background: #E5E7EB; color: var(--text-main); }
+        .icon-btn.delete:hover { background: #FEF2F2; color: #DC2626; }
+
+        /* --- FOOTER / PAGINACIÓN --- */
+        .grid-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #FAFAFA;
+        }
+        .pagination { display: flex; gap: 4px; }
+        .page-item {
+            width: 32px; height: 32px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 6px;
+            border: 1px solid transparent;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+        .page-item:hover { background: white; border-color: var(--border-color); }
+        .page-item.active { background: white; border-color: var(--border-color); color: var(--primary-orange); font-weight: 600; }
+
+        /* --- COMPONENTE: BARRA DE SELECCIÓN FLOTANTE (Bulk Actions) --- */
+        .bulk-actions {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #111827; /* Oscuro para contraste */
+            color: white;
+            padding: 12px 24px;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            opacity: 0.95;
+            z-index: 100;
+            /* Animation hidden for demo */
+            /* display: none; */ 
+        }
+        .bulk-divider { height: 20px; width: 1px; background: #374151; }
+
+        /* --- MODAL (Simulación) --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.4);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 999;
+            backdrop-filter: blur(2px);
+        }
+        .modal-card {
+            background: white;
+            width: 500px;
+            border-radius: 12px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            animation: slideUp 0.3s ease-out;
+        }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .modal-header { padding: 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        .modal-body { padding: 20px; }
+        .modal-footer { padding: 20px; background: #F9FAFB; display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid var(--border-color); }
+        
+        .form-group { margin-bottom: 16px; }
+        .form-label { display: block; margin-bottom: 6px; font-weight: 500; font-size: 0.85rem; color: var(--text-main); }
+        
+    </style>
+</head>
+<body>
+
+    <!-- CONTENEDOR DE LA GRILLA -->
+    <div class="data-grid-container">
+        
+        <!-- HEADER -->
+        <div class="grid-header">
+            <div>
+                <div class="breadcrumb">Inicio / Ingestas / Maestro Fert</div>
+                <div class="grid-title">Maestro Fert</div>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <button class="filter-btn">
+                    <span class="material-symbols-outlined icon-sm">download</span> Exportar
+                </button>
+                <button class="btn-primary" onclick="alert('Abre modal de creación')">
+                    <span class="material-symbols-outlined icon-sm">add</span> Nuevo Registro
+                </button>
+            </div>
+        </div>
+
+        <!-- TOOLBAR DE FILTROS -->
+        <div class="toolbar">
+            <div class="search-wrapper">
+                <span class="material-symbols-outlined">search</span>
+                <input type="text" class="input-control" placeholder="Buscar material, código...">
+            </div>
+            
+            <div style="width: 1px; height: 24px; background: var(--border-color); margin: 0 8px;"></div>
+            
+            <button class="filter-btn active">
+                <span class="material-symbols-outlined icon-sm">filter_alt</span> Planta: Lontué
+            </button>
+            <button class="filter-btn">
+                <span class="material-symbols-outlined icon-sm">calendar_today</span> Fecha
+            </button>
+            <button class="filter-btn">
+                <span class="material-symbols-outlined icon-sm">toggle_on</span> Estado
+            </button>
+
+            <div style="flex-grow: 1;"></div> <!-- Empuja lo siguiente a la derecha -->
+
+            <button class="filter-btn" style="border:none; color: var(--primary-orange);">
+                Limpiar Filtros
+            </button>
+        </div>
+
+        <!-- TABLA -->
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 40px;"><input type="checkbox"></th>
+                        <th>Material ID</th>
+                        <th>Descripción</th>
+                        <th>Planta</th>
+                        <th>Fecha Act.</th>
+                        <th>Usuario</th>
+                        <th>Estado</th>
+                        <th style="text-align: right;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Fila 1 -->
+                    <tr>
+                        <td><input type="checkbox"></td>
+                        <td style="font-weight: 500;">12013516</td>
+                        <td>2104 MERLOT MARQUES (8315)</td>
+                        <td>Lontué</td>
+                        <td>19-11-2024</td>
+                        <td>
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <div style="width:24px; height:24px; background:#E5E7EB; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.7rem; color:#4B5563;">BS</div>
+                                B. Sandoval
+                            </div>
+                        </td>
+                        <td><span style="background:#ECFDF5; color:#059669; padding:2px 8px; border-radius:12px; font-size:0.75rem; font-weight:600;">Activo</span></td>
+                        <td>
+                            <div class="action-cell">
+                                <button class="icon-btn" title="Editar"><span class="material-symbols-outlined" style="font-size:18px">edit</span></button>
+                                <button class="icon-btn delete" title="Eliminar"><span class="material-symbols-outlined" style="font-size:18px">delete</span></button>
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <!-- Fila 2 (Seleccionada) -->
+                    <tr class="selected">
+                        <td><input type="checkbox" checked></td>
+                        <td style="font-weight: 500;">10213327</td>
+                        <td>CS OCIO P.NOI P13MAD 7506U</td>
+                        <td>Pirque</td>
+                        <td>18-11-2024</td>
+                        <td>
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <div style="width:24px; height:24px; background:#E5E7EB; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.7rem; color:#4B5563;">JD</div>
+                                J. Doe
+                            </div>
+                        </td>
+                        <td><span style="background:#FEF3C7; color:#D97706; padding:2px 8px; border-radius:12px; font-size:0.75rem; font-weight:600;">Pendiente</span></td>
+                        <td>
+                            <div class="action-cell" style="opacity: 1;"> <!-- Forzamos opacidad para demo -->
+                                <button class="icon-btn" title="Editar"><span class="material-symbols-outlined" style="font-size:18px">edit</span></button>
+                                <button class="icon-btn delete" title="Eliminar"><span class="material-symbols-outlined" style="font-size:18px">delete</span></button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Fila 3 (Seleccionada) -->
+                    <tr class="selected">
+                        <td><input type="checkbox" checked></td>
+                        <td style="font-weight: 500;">10213071</td>
+                        <td>VDM D.MELCHOR C.SA P24 750</td>
+                        <td>Vespucio</td>
+                        <td>18-11-2024</td>
+                        <td>
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <div style="width:24px; height:24px; background:#E5E7EB; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.7rem; color:#4B5563;">BS</div>
+                                B. Sandoval
+                            </div>
+                        </td>
+                        <td><span style="background:#ECFDF5; color:#059669; padding:2px 8px; border-radius:12px; font-size:0.75rem; font-weight:600;">Activo</span></td>
+                        <td>
+                            <div class="action-cell">
+                                <button class="icon-btn" title="Editar"><span class="material-symbols-outlined" style="font-size:18px">edit</span></button>
+                                <button class="icon-btn delete" title="Eliminar"><span class="material-symbols-outlined" style="font-size:18px">delete</span></button>
+                            </div>
+                        </td>
+                    </tr>
+                     <!-- Fila 4 -->
+                     <tr>
+                        <td><input type="checkbox"></td>
+                        <td style="font-weight: 500;">10212908</td>
+                        <td>BOE FTZ CAB 750 6U 2023 NP</td>
+                        <td>Lontué</td>
+                        <td>17-11-2024</td>
+                        <td>
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <div style="width:24px; height:24px; background:#E5E7EB; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.7rem; color:#4B5563;">RM</div>
+                                R. Martinez
+                            </div>
+                        </td>
+                         <td><span style="background:#F3F4F6; color:#4B5563; padding:2px 8px; border-radius:12px; font-size:0.75rem; font-weight:600;">Archivado</span></td>
+                        <td>
+                            <div class="action-cell">
+                                <button class="icon-btn" title="Editar"><span class="material-symbols-outlined" style="font-size:18px">edit</span></button>
+                                <button class="icon-btn delete" title="Eliminar"><span class="material-symbols-outlined" style="font-size:18px">delete</span></button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- FOOTER PAGINACION -->
+        <div class="grid-footer">
+            <span style="color: var(--text-secondary); font-size: 0.85rem;">Mostrando 1-10 de 1,240 registros</span>
+            <div class="pagination">
+                <div class="page-item"><span class="material-symbols-outlined" style="font-size:16px;">chevron_left</span></div>
+                <div class="page-item active">1</div>
+                <div class="page-item">2</div>
+                <div class="page-item">3</div>
+                <div class="page-item">...</div>
+                <div class="page-item">12</div>
+                <div class="page-item"><span class="material-symbols-outlined" style="font-size:16px;">chevron_right</span></div>
+            </div>
+        </div>
+
+        <!-- COMPONENTE FLOTANTE DE ACCIONES MASIVAS -->
+        <!-- Aparece cuando hay checkboxes seleccionados -->
+        <div class="bulk-actions">
+            <span style="font-weight: 600; font-size: 0.9rem;">2 seleccionados</span>
+            <div class="bulk-divider"></div>
+            <button style="background:none; border:none; color:white; cursor:pointer; display:flex; align-items:center; gap:6px; font-size:0.85rem;">
+                <span class="material-symbols-outlined" style="font-size:18px">check_circle</span> Validar
+            </button>
+            <button style="background:none; border:none; color:white; cursor:pointer; display:flex; align-items:center; gap:6px; font-size:0.85rem;">
+                <span class="material-symbols-outlined" style="font-size:18px">download</span> Descargar
+            </button>
+            <button style="background:none; border:none; color:#FCA5A5; cursor:pointer; display:flex; align-items:center; gap:6px; font-size:0.85rem;">
+                <span class="material-symbols-outlined" style="font-size:18px">delete</span> Eliminar
+            </button>
+            <div class="bulk-divider"></div>
+            <button style="background:none; border:none; color:#9CA3AF; cursor:pointer;">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+
+    </div>
+
+    <!-- MODAL DE EDICIÓN / CREACIÓN (Simulado abajo) -->
+    <!-- En una app real estaría oculto (display:none) hasta hacer clic -->
+    <div style="margin-top: 50px; text-align: center; color: var(--text-secondary);">
+        <p>⬇ Ejemplo visual del Modal de Edición ⬇</p>
+    </div>
+
+    <div style="position: relative; height: 600px; margin-top: 20px; border: 1px dashed #ccc; border-radius: 12px; background: #eee;">
+        <!-- SIMULACIÓN DEL MODAL ABIERTO -->
+        <div class="modal-overlay" style="position: absolute; border-radius: 12px;">
+            <div class="modal-card">
+                <div class="modal-header">
+                    <h3 style="font-size: 1.1rem; font-weight: 600;">Modificar Registro</h3>
+                    <span class="material-symbols-outlined" style="cursor:pointer; color: #9CA3AF;">close</span>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Material ID</label>
+                        <input type="text" class="input-control" value="10213327" disabled style="background: #F3F4F6; color: #6B7280;">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Descripción</label>
+                        <input type="text" class="input-control" value="CS OCIO P.NOI P13MAD 7506U">
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="form-group">
+                            <label class="form-label">Planta</label>
+                            <select class="input-control">
+                                <option>Pirque</option>
+                                <option>Lontué</option>
+                                <option>Vespucio</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Estado</label>
+                            <select class="input-control">
+                                <option>Pendiente</option>
+                                <option>Activo</option>
+                                <option>Archivado</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Comentarios</label>
+                        <textarea class="input-control" rows="3" placeholder="Añade una nota..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="filter-btn">Cancelar</button>
+                    <button class="btn-primary">Guardar Cambios</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

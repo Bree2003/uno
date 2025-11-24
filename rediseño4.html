@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linaje y Diccionario - Concha y Toro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    
+    <style>
+        :root {
+            --primary-orange: #FF5B35;
+            --bg-body: #F8FAFC;
+            --bg-surface: #FFFFFF;
+            --text-main: #1F2937;
+            --text-secondary: #6B7280;
+            --border-color: #E5E7EB;
+            --line-color: #CBD5E1;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg-body); color: var(--text-main); padding: 40px; }
+
+        .container { max-width: 1200px; margin: 0 auto; }
+
+        /* --- SECCIÓN 1: LINAJE VISUAL --- */
+        .lineage-section {
+            background: var(--bg-surface);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .section-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+        
+        /* Simulación del Gráfico de Nodos */
+        .lineage-canvas {
+            height: 300px;
+            background-image: radial-gradient(#E5E7EB 1px, transparent 1px);
+            background-size: 20px 20px; /* Patrón de puntos técnico */
+            border-radius: 8px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 50px;
+        }
+
+        .node {
+            background: white;
+            border: 1px solid var(--border-color);
+            padding: 12px 16px;
+            border-radius: 8px;
+            width: 180px;
+            position: relative;
+            z-index: 2;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .node:hover {
+            border-color: var(--primary-orange);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(255, 91, 53, 0.15);
+        }
+
+        .node.active {
+            border: 2px solid var(--primary-orange);
+            background: #FFF7F5;
+        }
+
+        .node-icon { 
+            width: 32px; height: 32px; 
+            background: #F3F4F6; 
+            border-radius: 6px; 
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 8px;
+            color: #4B5563;
+        }
+        .active .node-icon { background: var(--primary-orange); color: white; }
+
+        .node-label { font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600; margin-bottom: 4px; }
+        .node-name { font-size: 0.95rem; font-weight: 600; color: var(--text-main); }
+
+        /* Conectores (Líneas SVG simuladas con CSS para el demo) */
+        .connector-line {
+            position: absolute;
+            top: 50%;
+            left: 180px; /* Ancho del nodo */
+            right: 0;
+            height: 2px;
+            background: var(--line-color);
+            z-index: 1;
+        }
+        
+        /* SVG real para curvas suaves */
+        .svg-connections {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* --- SECCIÓN 2: DICCIONARIO / METADATA --- */
+        .dictionary-grid {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 20px;
+            align-items: start;
+        }
+
+        .field-list {
+            background: var(--bg-surface);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .field-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+        .field-item:hover { background: #F9FAFB; }
+        .field-item.selected { background: #FFF0EB; color: var(--primary-orange); font-weight: 500; border-left: 3px solid var(--primary-orange); }
+        .field-type { font-size: 0.7rem; padding: 2px 6px; background: #E5E7EB; border-radius: 4px; color: #4B5563; }
+
+        .detail-card {
+            background: var(--bg-surface);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            padding: 30px;
+        }
+
+        .meta-header { display: flex; justify-content: space-between; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 20px; }
+        
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .stat-box {
+            background: #F9FAFB;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .stat-label { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px; }
+        .stat-number { font-size: 1.2rem; font-weight: 600; color: var(--text-main); }
+
+        /* Barra de progreso para calidad */
+        .progress-bar { height: 6px; background: #E5E7EB; border-radius: 3px; overflow: hidden; margin-top: 8px; }
+        .progress-fill { height: 100%; background: #10B981; width: 98%; } /* Verde éxito */
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <!-- VISTA DE LINAJE -->
+        <div class="lineage-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <div class="section-title">
+                    <span class="material-symbols-outlined">hub</span> Linaje de Datos
+                </div>
+                <button style="border:1px solid #E5E7EB; background:white; padding:6px 12px; border-radius:6px; font-size:0.85rem; cursor:pointer;">
+                    Expandir Vista
+                </button>
+            </div>
+
+            <div class="lineage-canvas">
+                <!-- SVG para dibujar las líneas curvas conectoras -->
+                <svg class="svg-connections">
+                    <!-- Linea de Fuente a Ingesta -->
+                    <path d="M180 150 C 230 150, 270 150, 320 150" stroke="#CBD5E1" stroke-width="2" fill="none"/>
+                    <!-- Linea de Ingesta a Este Producto (Activa) -->
+                    <path d="M500 150 C 550 150, 590 150, 640 150" stroke="#FF5B35" stroke-width="2" fill="none" stroke-dasharray="5,5"/>
+                    <!-- Linea de Este Producto a Consumo -->
+                    <path d="M820 150 C 870 150, 910 150, 960 150" stroke="#CBD5E1" stroke-width="2" fill="none"/>
+                </svg>
+
+                <!-- Nodo 1: Fuente -->
+                <div class="node">
+                    <div class="node-label">Fuente Origen</div>
+                    <div class="node-icon"><span class="material-symbols-outlined">table_view</span></div>
+                    <div class="node-name">SAP ERP (Hana)</div>
+                    <div style="font-size:0.75rem; color:#6B7280; margin-top:4px;">Tablas Z_PROD*</div>
+                </div>
+
+                <!-- Nodo 2: Proceso -->
+                <div class="node">
+                    <div class="node-label">Transformación</div>
+                    <div class="node-icon"><span class="material-symbols-outlined">settings_suggest</span></div>
+                    <div class="node-name">Ingesta Diaria</div>
+                    <div style="font-size:0.75rem; color:#6B7280; margin-top:4px;">Databricks Job</div>
+                </div>
+
+                <!-- Nodo 3: ESTE PRODUCTO (Activo) -->
+                <div class="node active">
+                    <div class="node-label">Dataset Actual</div>
+                    <div class="node-icon"><span class="material-symbols-outlined">database</span></div>
+                    <div class="node-name">Maestro Fert</div>
+                    <div style="font-size:0.75rem; color: var(--primary-orange); margin-top:4px;">Gold Layer</div>
+                </div>
+
+                <!-- Nodo 4: Consumo -->
+                <div class="node">
+                    <div class="node-label">Consumo</div>
+                    <div class="node-icon" style="color:#F59E0B; background:#FFFBEB"><span class="material-symbols-outlined">monitoring</span></div>
+                    <div class="node-name">Dashboard OP</div>
+                    <div style="font-size:0.75rem; color:#6B7280; margin-top:4px;">Power BI</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VISTA DE DICCIONARIO / METADATA -->
+        <div class="section-title" style="margin-top: 40px;">
+            <span class="material-symbols-outlined">menu_book</span> Diccionario de Datos
+        </div>
+
+        <div class="dictionary-grid">
+            
+            <!-- Lista de Campos (Izquierda) -->
+            <div class="field-list">
+                <div style="padding:12px 16px; background:#F9FAFB; border-bottom:1px solid #E5E7EB; font-weight:600; font-size:0.8rem; color:#6B7280;">
+                    CAMPOS DEL DATASET (12)
+                </div>
+                <!-- Items -->
+                <div class="field-item">
+                    <span>Material_ID</span> <span class="field-type">INT</span>
+                </div>
+                <div class="field-item selected">
+                    <span>Descripcion_Mat</span> <span class="field-type">VARCHAR</span>
+                </div>
+                <div class="field-item">
+                    <span>Centro_Planta</span> <span class="field-type">STRING</span>
+                </div>
+                <div class="field-item">
+                    <span>Linea_Prod</span> <span class="field-type">INT</span>
+                </div>
+                <div class="field-item">
+                    <span>Costo_Unitario</span> <span class="field-type">DECIMAL</span>
+                </div>
+                 <div class="field-item">
+                    <span>Fecha_Creacion</span> <span class="field-type">DATE</span>
+                </div>
+            </div>
+
+            <!-- Detalle del Campo (Derecha) -->
+            <div class="detail-card">
+                
+                <div class="meta-header">
+                    <div>
+                        <h2 style="font-size:1.5rem; margin-bottom:5px;">Descripcion_Mat</h2>
+                        <span style="font-family:monospace; background:#F3F4F6; padding:4px 8px; border-radius:4px; font-size:0.9rem;">campo: descripcion_tecnica_sap</span>
+                    </div>
+                    <div style="text-align:right;">
+                        <span style="display:inline-block; padding:4px 12px; background:#ECFDF5; color:#059669; border-radius:20px; font-size:0.8rem; font-weight:600;">Datos PII: No</span>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 30px;">
+                    <h4 style="margin-bottom:8px; font-size:0.95rem;">Definición de Negocio</h4>
+                    <p style="color:var(--text-secondary); line-height:1.6;">
+                        Corresponde a la descripción técnica oficial del material ingresada en SAP. Debe contener el nombre del producto, la cosecha (si aplica) y el formato de envase. Este campo es concatenado automáticamente por el sistema origen.
+                    </p>
+                </div>
+
+                <h4 style="margin-bottom:8px; font-size:0.95rem;">Estadísticas de Calidad (Perfilado)</h4>
+                <div class="stat-grid">
+                    <div class="stat-box">
+                        <div class="stat-label">Completitud</div>
+                        <div class="stat-number">100%</div>
+                        <div class="progress-bar"><div class="progress-fill" style="width:100%"></div></div>
+                        <div style="font-size:0.75rem; color:#6B7280; margin-top:4px;">0 nulos encontrados</div>
+                    </div>
+                    
+                    <div class="stat-box">
+                        <div class="stat-label">Unicidad</div>
+                        <div class="stat-number">92%</div>
+                        <div class="progress-bar"><div class="progress-fill" style="width:92%; background:#F59E0B"></div></div>
+                        <div style="font-size:0.75rem; color:#6B7280; margin-top:4px;">Valores repetidos permitidos</div>
+                    </div>
+
+                    <div class="stat-box">
+                        <div class="stat-label">Longitud Max</div>
+                        <div class="stat-number">120</div>
+                        <div style="font-size:0.75rem; color:#6B7280; margin-top:4px;">Caracteres</div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+                    <h4 style="margin-bottom:15px; font-size:0.95rem;">Ejemplos de Valores</h4>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                        <span style="background:#F3F4F6; padding:6px 12px; border-radius:6px; font-size:0.85rem; color:#4B5563;">CASILLERO DIABLO CAB 750ML</span>
+                        <span style="background:#F3F4F6; padding:6px 12px; border-radius:6px; font-size:0.85rem; color:#4B5563;">DON MELCHOR 2018 CAJA MADERA</span>
+                        <span style="background:#F3F4F6; padding:6px 12px; border-radius:6px; font-size:0.85rem; color:#4B5563;">FRONTERA MERLOT 1.5L</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>
