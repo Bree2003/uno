@@ -33,7 +33,7 @@ export interface UploadState {
   // Wizard
   isWizardOpen: boolean;
   currentStep: number;
-  stepData: any;
+  stepData: any; // Data dinámica del paso actual
   isLoadingAnalysis: boolean;
   analysisProgress: number; // Progreso de la subida al analizar
 
@@ -120,6 +120,7 @@ const FolderListController = () => {
 
   const handleFileChange = (file: File | null) =>
     setUploadState((p) => ({ ...p, file }));
+
   const handleTableChange = (tableId: string) =>
     setUploadState((p) => ({ ...p, selectedTable: tableId }));
 
@@ -133,6 +134,7 @@ const FolderListController = () => {
         uploadSuccess: false,
         stepData: null,
       }));
+      // Cargamos datos del paso 1 inmediatamente
       loadStepData(1);
     }
   };
@@ -143,8 +145,13 @@ const FolderListController = () => {
 
   // 2. Cargar datos del paso (Llama a /analyze)
   const loadStepData = async (step: number) => {
-    const { file } = uploadState;
-    if (!file) return;
+    const { file, selectedTable } = uploadState;
+
+    // VALIDACIÓN DE SEGURIDAD: Si falta algo crítico, no llamamos
+    if (!file || !envId || !bucketName || !productName || !selectedTable) {
+      console.error("Faltan datos para iniciar el análisis");
+      return;
+    }
 
     setUploadState((p) => ({
       ...p,
@@ -152,21 +159,31 @@ const FolderListController = () => {
       analysisProgress: 0,
     }));
 
+    // Construimos el 'destination' para validar contra BQ (ej: manual/brisa)
+    const destinationPath = `${productName}/${selectedTable}`;
+
     try {
-      // Enviamos callback de progreso para la subida del archivo al analizar
-      const response = await analyzeFileService(file, step, (pct) => {
-        setUploadState((p) => ({ ...p, analysisProgress: pct }));
-      });
+      // 👇 AQUÍ ESTÁ LA CORRECCIÓN CLAVE: Pasamos envId, bucketName y destinationPath
+      const response = await analyzeFileService(
+        file,
+        step,
+        envId,
+        bucketName,
+        destinationPath,
+        (pct) => {
+          setUploadState((p) => ({ ...p, analysisProgress: pct }));
+        }
+      );
 
       if (response.status === 200) {
-        // Inyectamos metadatos extra en el paso 1 para que Step1Confirmation tenga todo
         let data = response.data;
+        // Inyectamos metadatos extra en el paso 1 para la visualización
         if (step === 1) {
           data = {
             ...data,
             producto_dato: productName,
-            dataset_destino: uploadState.selectedTable, // Usamos el ID de la tabla como nombre dataset
-            usuario: "Usuario", // Puedes sacar esto del sessionStorage si quieres
+            dataset_destino: selectedTable,
+            usuario: "Usuario",
           };
         }
 
@@ -204,11 +221,12 @@ const FolderListController = () => {
 
     setUploadState((p) => ({ ...p, isUploading: true, uploadProgress: 0 }));
 
-    const SIZE_LIMIT = 300 * 1024 * 1024;
+    const SIZE_LIMIT = 300 * 1024 * 1024; // 300MB
     const destinationPath = `${productName}/${selectedTable}`;
 
     try {
       if (file.size < SIZE_LIMIT) {
+        // Camino Rápido (Backend)
         await uploadSmallFileService(
           envId,
           bucketName,
@@ -217,6 +235,7 @@ const FolderListController = () => {
           (pct) => setUploadState((p) => ({ ...p, uploadProgress: pct }))
         );
       } else {
+        // Camino Pesado (GCS Directo)
         const initRes = await initiateUploadService(
           envId,
           bucketName,
@@ -227,6 +246,7 @@ const FolderListController = () => {
           setUploadState((p) => ({ ...p, uploadProgress: pct }))
         );
       }
+
       setUploadState((p) => ({
         ...p,
         isUploading: false,
@@ -248,7 +268,7 @@ const FolderListController = () => {
       // Props del Form
       onFileChange={handleFileChange}
       onTableChange={handleTableChange}
-      onStartWizard={handleStartWizard} // <--- Conectado
+      onStartWizard={handleStartWizard}
       // Props del Wizard
       onCloseWizard={handleCloseWizard}
       onNextStep={handleNextStep}

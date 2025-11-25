@@ -56,8 +56,6 @@ export default function FileUploadSection({
           <input
             type="file"
             accept=".csv, .xlsx, .xls, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel, text/csv"
-            // Truco para limpiar el input visualmente al resetear
-            key={uploadState.file ? "loaded" : "empty"}
             className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-[#F46546] hover:file:bg-orange-100 cursor-pointer"
             onChange={(e) => e.target.files && onFileChange(e.target.files[0])}
           />

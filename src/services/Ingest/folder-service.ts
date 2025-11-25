@@ -82,20 +82,26 @@ export const uploadSmallFileService = async (
   });
 };
 
-// --- SERVICIO DE ANÁLISIS (WIZARD) ---
 export const analyzeFileService = async (
   file: File,
   step: number,
-  onProgress?: (percent: number) => void // <--- 1. Agregamos el callback opcional
+  // 👇 1. AGREGAMOS ESTOS ARGUMENTOS OBLIGATORIOS
+  envId: string,
+  bucketName: string,
+  destination: string,
+  onProgress?: (percent: number) => void
 ): Promise<AxiosResponse> => {
   const formData = new FormData();
   formData.append("file", file);
   formData.append("step", step.toString());
+  
+  // 👇 2. AGREGAMOS EL CONTEXTO AL FORM DATA
+  formData.append("env_id", envId);
+  formData.append("bucket_name", bucketName);
+  formData.append("destination", destination); // Esto será "producto/tabla"
 
-  // 2. Pasamos el config a AxiosPostForm
   return await AxiosPostForm('/api/storage/analyze', formData, {
     onUploadProgress: (progressEvent) => {
-      // Verificamos si existe 'total' y si nos pasaron la función 'onProgress'
       if (progressEvent.total && onProgress) {
         const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
         onProgress(percent);

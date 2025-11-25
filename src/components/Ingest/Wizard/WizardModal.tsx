@@ -71,6 +71,9 @@ export default function WizardModal({
     );
   }
 
+  const hasBlockingErrors =
+    currentStep === 3 && stepData?.bloqueantes?.length > 0;
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50 p-4">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl h-[600px] flex flex-col relative">
@@ -156,8 +159,15 @@ export default function WizardModal({
             ) : (
               <button
                 onClick={onFinalUpload}
-                className="px-6 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 shadow flex items-center gap-2 disabled:opacity-50"
-                disabled={isUploading || isLoading}
+                // Deshabilitamos si está subiendo, cargando O si hay errores bloqueantes
+                disabled={isUploading || isLoading || hasBlockingErrors}
+                className={`px-6 py-2 rounded-lg text-white shadow flex items-center gap-2 transition-colors
+        ${
+          hasBlockingErrors
+            ? "bg-gray-400 cursor-not-allowed" // Estilo gris si hay errores de BQ
+            : "bg-green-600 hover:bg-green-700 disabled:opacity-50" // Estilo verde normal
+        }
+    `}
               >
                 {isUploading
                   ? `Subiendo ${uploadProgress}%...`

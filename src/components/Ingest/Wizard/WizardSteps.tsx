@@ -4,6 +4,8 @@ import {
   AnalysisStep2Data,
   AnalysisStep3Data,
 } from "models/Ingest/analysis-model";
+import { ReactComponent as Danger } from "components/Global/Icons/danger.svg";
+import { ReactComponent as Warning } from "components/Global/Icons/warning.svg";
 
 // --- HELPERS ---
 const DetailRow = ({ label, value }: { label: string; value: any }) => (
@@ -125,53 +127,68 @@ export const Step2Structure = ({ data }: { data: AnalysisStep2Data }) => {
 };
 
 // --- STEP 3: VALIDACIÓN ---
-export const Step3Validation = ({ data }: { data: AnalysisStep3Data }) => {
-  if (!data) return <div className="p-4 text-center">Validando...</div>;
+export const Step3Validation = ({ data }: { data: any }) => {
+  if (!data) return <p>Cargando...</p>;
 
-  const hasErrors = data.alertas && data.alertas.length > 0;
+  const errores = data.bloqueantes || [];
+  const alertas = data.alertas || [];
+  const isValid = errores.length === 0 && alertas.length === 0;
 
   return (
-    <div className="flex flex-col items-center justify-center h-full p-6">
-      {hasErrors ? (
-        <div className="w-full bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
-          <div className="flex">
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-yellow-800">
-                Se encontraron alertas
-              </h3>
-              <div className="mt-2 text-sm text-yellow-700">
-                <ul className="list-disc pl-5 space-y-1">
-                  {data.alertas.map((alert, idx) => (
-                    <li key={idx}>{alert}</li>
-                  ))}
-                </ul>
+    <div className="h-full overflow-y-auto pr-2">
+      {data.validado_contra && (
+        <p className="text-xs text-gray-500 mb-4">
+          Esquema: {data.validado_contra}
+        </p>
+      )}
+
+      {/* 1. ERRORES BLOQUEANTES (ROJO) */}
+      {errores.length > 0 && (
+        <div className="mb-6">
+          <h4 className="text-red-700 font-bold text-sm mb-2">
+            Errores Bloqueantes (Impide Ingesta)
+          </h4>
+          <div className="space-y-2">
+            {errores.map((err: string, idx: number) => (
+              <div
+                key={idx}
+                className="flex items-start p-3 text-sm bg-red-50 text-red-800 border-l-4 border-red-500 rounded-r-lg"
+              >
+                <span className="mr-2">🛑</span>
+                <span>{err}</span>
               </div>
-            </div>
+            ))}
           </div>
         </div>
-      ) : (
-        <div className="text-center">
-          <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4">
-            <svg
-              className="h-10 w-10 text-green-600"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
+      )}
+
+      {/* 2. ALERTAS (AMARILLO) */}
+      {alertas.length > 0 && (
+        <div className="mb-6">
+          <h4 className="text-yellow-700 font-bold text-sm mb-2">
+            Advertencias (Permite Ingesta)
+          </h4>
+          <div className="space-y-2">
+            {alertas.map((warn: string, idx: number) => (
+              <div
+                key={idx}
+                className="flex items-start p-3 text-sm bg-yellow-50 text-yellow-800 border-l-4 border-yellow-400 rounded-r-lg"
+              >
+                <Danger className="w-5 h-5 mr-2 shrink-0" />
+                <span>{warn}</span>
+              </div>
+            ))}
           </div>
-          <h3 className="text-lg leading-6 font-medium text-gray-900">
-            Validación Exitosa
-          </h3>
-          <p className="mt-2 text-sm text-gray-500">
-            La estructura del archivo es correcta y no se encontraron errores
-            críticos.
+        </div>
+      )}
+
+      {/* 3. ÉXITO */}
+      {isValid && (
+        <div className="p-6 text-center bg-green-50 text-green-800 border border-green-200 rounded-lg mt-4">
+          <div className="text-4xl mb-2">✅</div>
+          <p className="font-bold">Validación Exitosa</p>
+          <p className="text-sm">
+            El archivo cumple perfectamente con el esquema de la tabla destino.
           </p>
         </div>
       )}

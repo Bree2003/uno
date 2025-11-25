@@ -4,8 +4,8 @@ import { ReactComponent as Error } from "components/Global/Icons/close-circle.sv
 import { ReactComponent as ArrowLeft } from "components/Global/Icons/arrow-left.svg";
 
 // --- NOVEDAD: Importaciones para el Skeleton ---
-import Skeleton from 'react-loading-skeleton';
-import 'react-loading-skeleton/dist/skeleton.css';
+import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
 
 type Log = {
   dataset: string;
@@ -20,10 +20,10 @@ interface resumenProductoProps {
 
 // --- NOVEDAD: Helper para formatear el nombre del producto en el título ---
 const formatProductName = (text: string) => {
-    return text.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  return text.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
 };
 
-export default function ResumenProducto( {productName}: resumenProductoProps) {
+export default function ResumenProducto({ productName }: resumenProductoProps) {
   const [logs, setLogs] = useState<Log[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -69,17 +69,25 @@ export default function ResumenProducto( {productName}: resumenProductoProps) {
       .padStart(2, "0")}`;
   };
 
-
-
   // --- NOVEDAD: Componente interno para una fila de esqueleto ---
   // Esto mantiene el JSX de la tabla más limpio.
   const SkeletonRow = () => (
     <tr className="border-b">
-      <td className="whitespace-nowrap px-6 py-4"><Skeleton width={120} /></td>
-      <td className="whitespace-nowrap px-6 py-4"><Skeleton width={200} /></td>
-      <td className="whitespace-nowrap px-6 py-4"><Skeleton width={80} /></td>
-      <td className="whitespace-nowrap px-6 py-4"><Skeleton width={60} /></td>
-      <td className="whitespace-nowrap px-6 py-4"><Skeleton width={70} /></td>
+      <td className="whitespace-nowrap px-6 py-4">
+        <Skeleton width={120} />
+      </td>
+      <td className="whitespace-nowrap px-6 py-4">
+        <Skeleton width={200} />
+      </td>
+      <td className="whitespace-nowrap px-6 py-4">
+        <Skeleton width={80} />
+      </td>
+      <td className="whitespace-nowrap px-6 py-4">
+        <Skeleton width={60} />
+      </td>
+      <td className="whitespace-nowrap px-6 py-4">
+        <Skeleton width={70} />
+      </td>
     </tr>
   );
 
@@ -88,13 +96,17 @@ export default function ResumenProducto( {productName}: resumenProductoProps) {
       <div>
         <h2 className="font-bold text-left text-2xl mb-10">
           {/* --- NOVEDAD: Esqueleto para el título --- */}
-          {isLoading ? <Skeleton width={400} /> : `Resumen ${formatProductName(productName)}`}
+          {isLoading ? (
+            <Skeleton width={400} />
+          ) : (
+            `Resumen ${formatProductName(productName)}`
+          )}
         </h2>
         <div className="overflow-x-auto mb-3">
           <table className="min-w-full text-left text-sm font-light">
             <thead className="border-b font-medium bg-gray-100">
               <tr>
-                <th className="px-6 py-4">Dataset</th>
+                <th className="px-6 py-4">Tabla</th>
                 <th className="px-6 py-4">Nombre de archivo</th>
                 <th className="px-6 py-4">Última carga</th>
                 <th className="px-6 py-4">Hora</th>
@@ -117,10 +129,18 @@ export default function ResumenProducto( {productName}: resumenProductoProps) {
                     key={index}
                     className="border-b transition duration-300 ease-in-out hover:bg-gray-50"
                   >
-                    <td className="whitespace-nowrap px-6 py-4 font-medium">{log.dataset}</td>
-                    <td className="whitespace-nowrap px-6 py-4">{log.file_name}</td>
-                    <td className="whitespace-nowrap px-6 py-4">{formatDate(log.timestamp)}</td>
-                    <td className="whitespace-nowrap px-6 py-4">{formatTime(log.timestamp)}</td>
+                    <td className="whitespace-nowrap px-6 py-4 font-medium">
+                      {log.dataset}
+                    </td>
+                    <td className="whitespace-nowrap px-6 py-4">
+                      {log.file_name}
+                    </td>
+                    <td className="whitespace-nowrap px-6 py-4">
+                      {formatDate(log.timestamp)}
+                    </td>
+                    <td className="whitespace-nowrap px-6 py-4">
+                      {formatTime(log.timestamp)}
+                    </td>
                     <td className="whitespace-nowrap px-6 py-4 flex items-center gap-1">
                       {log.severity === "ERROR" ? <Error /> : <Ok />}
                       {log.severity === "ERROR" ? "Error" : "Ok"}
@@ -140,7 +160,7 @@ export default function ResumenProducto( {productName}: resumenProductoProps) {
         </div>
         {/* <div className="text-right flex justify-end">
           {/* --- NOVEDAD: Esqueleto para el botón --- */}
-          {/* {isLoading ? (
+        {/* {isLoading ? (
             <Skeleton width={210} height={24}/>
           ) : (
             <button className="text-[--color-naranjo] flex gap-1">
