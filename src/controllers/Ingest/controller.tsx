@@ -45,8 +45,13 @@ const IngestController = () => {
 
   // --- LÓGICA DE NAVEGACIÓN ---
   const handleSelectEnvironment = (envId: string) => {
-    // Navegamos a la URL dinámica, ej: /ingest/sap/buckets
-    navigate(`/ingest/${envId}`);
+    if (envId === "pd") {
+      // Ruta en dura específica para PD con su bucket asignado
+      navigate(`/dashboard/${envId}/raw-dev-osc-manual-bucket/products`);
+    } else {
+      // Para SAP (y el resto) mantenemos la lógica original
+      navigate(`/dashboard/${envId}`);
+    }
   };
 
   // --- HELPERS DE ESTADO (Patrón idéntico a tu ejemplo) ---

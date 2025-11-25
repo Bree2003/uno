@@ -11,11 +11,11 @@ import {
   setUserToken,
 } from "../../../store/actions/userToken";
 import Loading from "components/Global/Loading/Loading";
-import { useTypedSelector } from "../../../store/hooks/useTypeSelector";
+import { useAppSelector } from "../../../store/hooks/redux-hooks";
 import { SSO_CREDENTIALS_TEXT } from "constants/constants";
 
 export const UserTokenPermission = ({ children }: { children: ReactElement }) => {
-  const { loading } = useTypedSelector((state: any) => state.UserPermissions);
+  const { loading } = useAppSelector((state: any) => state.UserPermissions);
 
   const dispatch: Dispatch<any> = useDispatch();
 

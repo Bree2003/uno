@@ -7,6 +7,7 @@ import {
   initiateUploadService,
   uploadFileDirectlyService,
   uploadSmallFileService,
+  analyzeFileService,
 } from "services/Ingest/folder-service";
 import FolderListScreen from "screens/Ingest/FolderListScreen";
 
@@ -24,21 +25,41 @@ export interface FolderStateModel {
   productName: string;
 }
 
-// Estado para el formulario de subida
 export interface UploadState {
-  isOpen: boolean; // Si el modal está abierto
-  selectedTable: string; // ID de la tabla destino
-  file: File | null; // Archivo seleccionado
-  progress: number; // 0 a 100
+  // Formulario inicial
+  selectedTable: string;
+  file: File | null;
+
+  // Wizard
+  isWizardOpen: boolean;
+  currentStep: number;
+  stepData: any;
+  isLoadingAnalysis: boolean;
+  analysisProgress: number; // Progreso de la subida al analizar
+
+  // Subida Final
   isUploading: boolean;
+  uploadProgress: number;
   uploadSuccess: boolean;
 }
+
+const initialUploadState: UploadState = {
+  selectedTable: "",
+  file: null,
+  isWizardOpen: false,
+  currentStep: 1,
+  stepData: null,
+  isLoadingAnalysis: false,
+  analysisProgress: 0,
+  isUploading: false,
+  uploadProgress: 0,
+  uploadSuccess: false,
+};
 
 const FolderListController = () => {
   const { envId, bucketName, productName } = useParams();
   const navigate = useNavigate();
 
-  // Estado principal de datos
   const [model, setModel] = useState<Partial<FolderStateModel>>({
     tables: [],
     envId,
@@ -46,16 +67,8 @@ const FolderListController = () => {
     productName,
   });
 
-  // Estado del formulario de upload
-  const [uploadState, setUploadState] = useState<UploadState>({
-    isOpen: false,
-    selectedTable: "",
-    file: null,
-    progress: 0,
-    isUploading: false,
-    uploadSuccess: false,
-  });
-
+  const [uploadState, setUploadState] =
+    useState<UploadState>(initialUploadState);
   const [endpoints, setEndpoints] =
     useState<Partial<Record<EndpointName, EndpointStatus>>>();
 
@@ -65,6 +78,7 @@ const FolderListController = () => {
     }
   }, [envId, bucketName, productName]);
 
+  // --- HELPERS ---
   const setEndpointStatus = (
     name: EndpointName,
     status: Partial<EndpointStatus>
@@ -81,9 +95,7 @@ const FolderListController = () => {
 
   const loadFolders = async () => {
     if (!envId || !bucketName || !productName) return;
-
     setEndpointStatus("GetFolders", { loading: true, error: false });
-
     try {
       const response = await getFoldersService(envId, bucketName, productName);
       const cleanTables = FolderAdapter(response);
@@ -97,95 +109,132 @@ const FolderListController = () => {
   };
 
   const handleSelectTableForPreview = (tableName: string) => {
-    // Navegación antigua para ver preview (si hacen click en la tarjeta)
     navigate(
-      `/ingest/${envId}/${bucketName}/${productName}/${tableName}/preview`
+      `/dashboard/${envId}/${bucketName}/${productName}/${tableName}/preview`
     );
   };
 
   const handleBack = () => navigate(-1);
 
-  // --- LÓGICA DEL FORMULARIO DE UPLOAD ---
+  // --- FORMULARIO Y WIZARD ---
 
-  const toggleUploadModal = (isOpen: boolean) => {
-    setUploadState((prev) => ({
-      ...prev,
-      isOpen,
-      uploadSuccess: false,
-      progress: 0,
-      file: null,
+  const handleFileChange = (file: File | null) =>
+    setUploadState((p) => ({ ...p, file }));
+  const handleTableChange = (tableId: string) =>
+    setUploadState((p) => ({ ...p, selectedTable: tableId }));
+
+  // 1. Abrir Wizard
+  const handleStartWizard = () => {
+    if (uploadState.file && uploadState.selectedTable) {
+      setUploadState((p) => ({
+        ...p,
+        isWizardOpen: true,
+        currentStep: 1,
+        uploadSuccess: false,
+        stepData: null,
+      }));
+      loadStepData(1);
+    }
+  };
+
+  const handleCloseWizard = () => {
+    setUploadState(initialUploadState);
+  };
+
+  // 2. Cargar datos del paso (Llama a /analyze)
+  const loadStepData = async (step: number) => {
+    const { file } = uploadState;
+    if (!file) return;
+
+    setUploadState((p) => ({
+      ...p,
+      isLoadingAnalysis: true,
+      analysisProgress: 0,
     }));
+
+    try {
+      // Enviamos callback de progreso para la subida del archivo al analizar
+      const response = await analyzeFileService(file, step, (pct) => {
+        setUploadState((p) => ({ ...p, analysisProgress: pct }));
+      });
+
+      if (response.status === 200) {
+        // Inyectamos metadatos extra en el paso 1 para que Step1Confirmation tenga todo
+        let data = response.data;
+        if (step === 1) {
+          data = {
+            ...data,
+            producto_dato: productName,
+            dataset_destino: uploadState.selectedTable, // Usamos el ID de la tabla como nombre dataset
+            usuario: "Usuario", // Puedes sacar esto del sessionStorage si quieres
+          };
+        }
+
+        setUploadState((p) => ({
+          ...p,
+          stepData: data,
+          currentStep: step,
+          isLoadingAnalysis: false,
+        }));
+      } else {
+        console.error("Error análisis", response);
+        setUploadState((p) => ({ ...p, isLoadingAnalysis: false }));
+      }
+    } catch (e) {
+      console.error(e);
+      setUploadState((p) => ({ ...p, isLoadingAnalysis: false }));
+    }
   };
 
-  const handleFileChange = (file: File | null) => {
-    setUploadState((prev) => ({ ...prev, file }));
+  const handleNextStep = () => {
+    const next = uploadState.currentStep + 1;
+    loadStepData(next);
   };
 
-  const handleTableChange = (tableId: string) => {
-    setUploadState((prev) => ({ ...prev, selectedTable: tableId }));
+  const handlePrevStep = () => {
+    const prev = uploadState.currentStep - 1;
+    loadStepData(prev);
   };
 
-  const handleUpload = async () => {
+  // 3. Subida Final (Optimized Upload)
+  const handleFinalUpload = async () => {
     const { file, selectedTable } = uploadState;
     if (!file || !selectedTable || !envId || !bucketName || !productName)
       return;
 
-    setUploadState((prev) => ({ ...prev, isUploading: true, progress: 0 }));
-    setEndpointStatus("UploadFile", { loading: true, error: false });
+    setUploadState((p) => ({ ...p, isUploading: true, uploadProgress: 0 }));
 
-    // 1. Definimos el límite: 300MB en Bytes
     const SIZE_LIMIT = 300 * 1024 * 1024;
     const destinationPath = `${productName}/${selectedTable}`;
 
     try {
       if (file.size < SIZE_LIMIT) {
-        // --- OPCIÓN A: ARCHIVO PEQUEÑO (Backend -> Parquet) ---
-        console.log("📂 Archivo < 300MB. Usando endpoint /upload (Backend)");
-
-        // Como el backend procesa el archivo, no tendremos un progreso "real" de subida a GCS,
-        // pero sí de subida al servidor. Simulamos un poco para UX.
         await uploadSmallFileService(
           envId,
           bucketName,
           destinationPath,
           file,
-          (percent) =>
-            setUploadState((prev) => ({ ...prev, progress: percent }))
+          (pct) => setUploadState((p) => ({ ...p, uploadProgress: pct }))
         );
       } else {
-        // --- OPCIÓN B: ARCHIVO GRANDE (Directo GCS -> Resumable) ---
-        console.log(
-          "📦 Archivo >= 300MB. Usando Resumable Upload (Directo GCS)"
-        );
-
-        const initResponse = await initiateUploadService(
+        const initRes = await initiateUploadService(
           envId,
           bucketName,
           destinationPath,
           file.name
         );
-
-        await uploadFileDirectlyService(
-          initResponse.sessionUrl,
-          file,
-          (percent) =>
-            setUploadState((prev) => ({ ...prev, progress: percent }))
+        await uploadFileDirectlyService(initRes.sessionUrl, file, (pct) =>
+          setUploadState((p) => ({ ...p, uploadProgress: pct }))
         );
       }
-
-      // Éxito común para ambos casos
-      setUploadState((prev) => ({
-        ...prev,
+      setUploadState((p) => ({
+        ...p,
         isUploading: false,
         uploadSuccess: true,
       }));
-      console.log("Subida exitosa!");
-    } catch (error) {
-      console.error("Error subiendo archivo", error);
-      setUploadState((prev) => ({ ...prev, isUploading: false, progress: 0 }));
-      setEndpointStatus("UploadFile", { error: true });
-    } finally {
-      setEndpointStatus("UploadFile", { loading: false });
+    } catch (e) {
+      console.error(e);
+      setUploadState((p) => ({ ...p, isUploading: false }));
     }
   };
 
@@ -193,14 +242,18 @@ const FolderListController = () => {
     <FolderListScreen
       model={model}
       endpoints={endpoints}
-      uploadState={uploadState} // Pasamos el estado del form
+      uploadState={uploadState}
       onSelectTable={handleSelectTableForPreview}
       onBack={handleBack}
-      // Handlers del form
-      onToggleModal={toggleUploadModal}
+      // Props del Form
       onFileChange={handleFileChange}
       onTableChange={handleTableChange}
-      onUpload={handleUpload}
+      onStartWizard={handleStartWizard} // <--- Conectado
+      // Props del Wizard
+      onCloseWizard={handleCloseWizard}
+      onNextStep={handleNextStep}
+      onPrevStep={handlePrevStep}
+      onFinalUpload={handleFinalUpload}
     />
   );
 };

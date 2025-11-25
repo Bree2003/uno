@@ -11,10 +11,12 @@ export const CenteredBox = styled.div`
   box-sizing: border-box;
   border-radius: 2px;
   gap: 20px;
-  color: #309F33;
-  border: 1px solid #309F33;
+
+  /* --- CAMBIOS --- */
+  /* Usamos la variable CSS para el borde de acento */
+  border: 1px solid var(--color-naranjo);
   border-radius: 30px;
-  background: #FFFFFF;
+  background: #FFFFFF; /* Mantenemos el fondo blanco para mayor claridad */
 `;
 
 export const Row = styled.div`
@@ -27,6 +29,10 @@ export const Title = styled.h4`
   font-size: 32px;
   line-height: 137.99%;
   text-align: center;
+
+  /* --- CAMBIOS --- */
+  /* El título lleva el color de acento principal */
+  color: var(--color-naranjo);
 `;
 
 export const Message = styled.h4`
@@ -35,6 +41,10 @@ export const Message = styled.h4`
   text-transform: none;
   font-size: 18px;
   font-weight: 400;
+
+  /* --- CAMBIOS --- */
+  /* Usamos un color más oscuro y neutro para el mensaje, para mejor legibilidad */
+  color: var(--color-gris-oscuro);
 `;
 
 export const LinkSmallMessage = styled.h4`
@@ -43,8 +53,11 @@ export const LinkSmallMessage = styled.h4`
   text-transform: none;
   font-size: 18px;
   font-weight: 400;
-  color: #309F33;
-  border-bottom: 1px solid #309F33;
+
+  /* --- CAMBIOS --- */
+  /* El enlace siempre debe tener el color de acento */
+  color: var(--color-naranjo);
+  border-bottom: 1px solid var(--color-naranjo);
 `;
 
 export const LinkMessage = styled.h4`
@@ -53,6 +66,9 @@ export const LinkMessage = styled.h4`
   text-transform: none;
   font-size: 24px;
   font-weight: 500;
-  color: #309F33;
-  border-bottom: 1px solid #309F33;
+  
+  /* --- CAMBIOS --- */
+  /* El enlace siempre debe tener el color de acento */
+  color: var(--color-naranjo);
+  border-bottom: 1px solid var(--color-naranjo);
 `;

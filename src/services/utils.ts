@@ -7,6 +7,109 @@ export interface AxiosResponse {
   status: number;
 }
 
+
+
+
+
+
+
+export const AxiosPostFormData = (uri: string, body: FormData): Promise<AxiosResponse> => {
+  const token = getOnSessionStorage("accessToken");
+  
+  // Creamos un objeto de cabeceras explícito
+  const optionsHeaders: { [key: string]: string } = {};
+
+  // Solo añadimos la cabecera de autorización SI el token existe
+  if (token) {
+    optionsHeaders['Authorization'] = `Bearer ${token.toString()}`;
+  }
+  // IMPORTANTE: No añadimos 'Content-Type', el navegador lo hace por nosotros para FormData
+
+  return connectAxios(axios)
+    .post(process.env.REACT_APP_BACKEND_URL + uri, body, {
+      headers: optionsHeaders,
+      validateStatus: () => true,
+      timeout: 1200000,
+    })
+    .then((response) => ({ status: response.status, data: response.data }))
+    .catch(function (error) {
+      console.log(error);
+      return { status: error.status, data: error.message };
+    });
+};
+
+
+
+
+export const AxiosPutResumable = async (
+  sessionUrl: string,
+  file: File
+): Promise<AxiosResponse> => {
+  return await axios
+    .put(sessionUrl, file, {
+      headers: {
+        // Esta cabecera es OBLIGATORIA para las subidas reanudables.
+        'Content-Length': file.size.toString(),
+      },
+      validateStatus: () => true,
+      // Incluimos el progreso de subida, muy útil para archivos grandes
+      onUploadProgress: (progressEvent) => {
+        if (progressEvent.total) {
+          const percentCompleted = Math.round(
+            (progressEvent.loaded * 100) / progressEvent.total
+          );
+          console.log(`Progreso de subida: ${percentCompleted}%`);
+        }
+      },
+    })
+    .then((response) => ({
+      // GCS devuelve un 200 en éxito con un cuerpo vacío.
+      status: response.status,
+      data: response.data,
+    }))
+    .catch((error) => {
+      console.error("Error en la subida directa a GCS:", error);
+      return { status: error.response?.status || 500, data: error.message };
+    });
+  };
+
+
+export const AxiosPutSignedUrl = async (
+  url: string,
+  file: File,
+  contentType: string
+): Promise<AxiosResponse> => {
+  return await axios
+    .put(url, file, {
+      headers: {
+        // La cabecera Content-Type DEBE coincidir con la que se usó para generar la URL
+        'Content-Type': contentType,
+      },
+      validateStatus: () => true,
+      // Opcional: para monitorear el progreso de la subida
+      onUploadProgress: (progressEvent) => {
+        if (progressEvent.total) {
+            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            console.log(`Progreso de subida: ${percentCompleted}%`);
+        }
+      },
+    })
+    .then((response) => ({
+      // GCS devuelve un 200 en éxito, no devuelve un cuerpo.
+      status: response.status,
+      data: response.data,
+    }))
+    .catch((error) => {
+      console.error("Error en la subida directa a GCS:", error);
+      return { status: error.response?.status || 500, data: error.message };
+    });
+};
+
+export interface AxiosResponse {
+  data: any;
+  status: number;
+}
+
 // DATA PERSISTANCE
 export const saveOnSessionStorage = (key: string, value: any) => {
   sessionStorage.setItem(key, JSON.stringify(value));
@@ -216,3 +319,5 @@ export const AxiosDownload = (uri: string, body: {}, config?: {}): Promise<Axios
       return { status: error.status, data: error.message };
     });
 };
+
+

@@ -1,7 +1,4 @@
-import styled from "styled-components";
-import { ReactComponent as Logo } from 'components/Global/Icons/logo.svg';
-import { SvgIcon } from "@mui/material";
-import { SvgIconProps } from "@mui/material/SvgIcon/SvgIcon";
+import styled, { keyframes } from "styled-components"; // Importa keyframes explícitamente
 
 interface MainScreenStyle {
     background?: string;
@@ -22,25 +19,44 @@ const MainScreen = styled.div<MainScreenStyle>`
   background: ${(props) => (props.background ? props.background : 'rgba(0, 0, 0, 0.7)')};
 `;
 
-const Spinner = styled.div`
-  margin: auto;
-  border: 5px solid #eaf0f6;
-  border-radius: 50%;
-  border-top: 5px solid #309F33;
-  width: 150px;
-  height: 150px;
-  background: #FFFFFF;
-  animation: spinner 4s linear infinite;
-
-  @keyframes spinner {
-    0% {
-      transform: rotate(0deg);
-    }
-    100% {
-      transform: rotate(360deg);
-    }
+// Define la animación de giro directamente con keyframes para styled-components
+const spin = keyframes`
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
   }
 `;
+
+const SpinnerWrapper = styled.div`
+  margin: auto;
+  border: 5px solid #FF5B35; /* Borde base del spinner */
+  border-radius: 50%;
+  border-top: 5px solid #000000; /* Borde superior giratorio (color oscuro) */
+  width: 150px;
+  height: 150px;
+  position: relative; /* Necesario para posicionar el logo ABSOLUTAMENTE en el centro */
+  animation: ${spin} 2s linear infinite; /* Aplica la animación aquí */
+`;
+
+const SpinnerLogoContainer = styled.div`
+  position: absolute; /* Para centrarlo dentro de SpinnerWrapper */
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%); /* Centrado perfecto */
+  width: 140px; /* El contenedor del logo ocupa todo el espacio del spinner wrapper */
+  height: 140px;
+  border-radius: 50%; /* Asegura que el logo se recorte si es grande */
+  overflow: hidden; /* Recorta la imagen si sobresale del círculo */
+
+  // La imagen de fondo va aquí, en el contenedor interno que NO gira
+  background-image: url('/images/logo-loading.webp');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+`;
+
 
 const Message = styled.div`
   font-family: "Arial";
@@ -52,30 +68,11 @@ const Message = styled.div`
   text-transform: uppercase;
   text-align: center;
   position: absolute;
-  top: 65%;
+  top: 65%; /* Ajustado un poco más abajo para el mensaje */
   left: 50%;
   transform: translate(-50%, -50%);
   color: rgba(255, 255, 255, 0.9);
 `;
-
-const LogoProperties = {
-  padding: 0,
-  margin: 0,
-  position: "absolute",
-  top: "50%",
-  left: "50%",
-  transform: "translate(-50%, -50%)",
-  fontSize: 150,
-  color: "#309F33",
-};
-
-const LogoIcon = (props: SvgIconProps) => {
-    return (
-        <SvgIcon viewBox="0 0 74 28" {...props}>
-            <Logo />
-        </SvgIcon>
-    )
-}
 
 const Loading = ({
     message,
@@ -86,8 +83,10 @@ const Loading = ({
 }) => {
     return (
       <MainScreen background={backgroundColor} >
-        <Spinner />
-        <LogoIcon sx={LogoProperties} />
+        <div>
+          <SpinnerLogoContainer />
+        <SpinnerWrapper />
+        </div>
         <Message>{message}</Message>
       </MainScreen>
     );

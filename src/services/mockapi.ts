@@ -23,6 +23,7 @@ const MockApi = (
     connectMainMocks(mock);
     return axiosObj;
   }
+  return axiosObj;
 };
 
 export default MockApi;

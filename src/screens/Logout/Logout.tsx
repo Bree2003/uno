@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { ReactComponent as Logo } from 'components/Global/Icons/logo.svg';
+import { ReactComponent as Logo } from 'components/Global/Iconslogo.svg';
 import { SvgIcon } from "@mui/material";
 import { SvgIconProps } from "@mui/material/SvgIcon/SvgIcon";
 

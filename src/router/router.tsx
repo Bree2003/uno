@@ -5,25 +5,25 @@ import {
   Routes,
   Outlet,
   Navigate,
-  useNavigate,
-} from "react-router-dom";
+  useNavigate
+} from 'react-router-dom';
 import { ThemeProvider } from "@mui/material/styles";
 import { SnackbarProvider } from "notistack";
-import commonTheme from "themes/common-theme";
+import commonTheme from 'themes/common-theme';
 import { Provider } from "react-redux";
 import store from "../store/store";
-import UserTokenPermission from "modules/tokenPermission/components/userTokenPermission";
-import { useTypedSelector } from "store/hooks/useTypeSelector";
+import UserTokenPermission from 'modules/tokenPermission/components/userTokenPermission';
+import { useAppSelector } from "store/hooks/redux-hooks";
 
-import MainController from "controllers/Main/controller";
+import MainController from 'controllers/Main/controller';
 
 import NotAuthorizedScreen from "screens/Errors/401";
 import NotFoundScreen from "screens/Errors/404";
 
 import AcquireToken from "../modules/authentication/components/acquireToken";
 import Login from "modules/authentication/components/login";
-import Logout from "modules/authentication/components/logout";
-import LogoutScreen from "screens/Logout/Logout";
+import Logout from 'modules/authentication/components/logout';
+import LogoutScreen from 'screens/Logout/Logout';
 import { Configuration, PublicClientApplication } from "@azure/msal-browser";
 import { MsalProvider } from "@azure/msal-react";
 import { msalConfig } from "../services/sso-authentication";
@@ -31,11 +31,15 @@ import {
   AuthenticatedTemplate,
   UnauthenticatedTemplate,
 } from "@azure/msal-react";
+import AppLayout from "AppLayout";
+import ProductoController from "controllers/Productodato/controller";
+import UploadController from "controllers/Main/UploadController";
 import IngestController from "controllers/Ingest/controller";
 import BucketListController from "controllers/Ingest/BucketListController";
 import ProductListController from "controllers/Ingest/ProductListController";
 import FolderListController from "controllers/Ingest/FolderListController";
 import PreviewController from "controllers/Ingest/PreviewController";
+import LoginController from "controllers/Login/LoginController";
 
 const msalInstance = new PublicClientApplication(msalConfig as Configuration);
 
@@ -48,15 +52,16 @@ const NotFoundRedirectRoute = () => {
 };
 
 const ProtectedRoute = ({ perm }: { perm?: string }) => {
-  const { user } = useTypedSelector((state) => state.UserPermissions);
+  const { user } = useAppSelector((state) => state.UserPermissions);
   const roles = user.roles;
   if (user !== undefined && roles.length > 0) {
-    const isAppUser = roles.includes("user");
+    const isAppUser = roles.includes('user');
     if (perm !== undefined) {
       const isPerm = roles.includes(perm);
       if (isAppUser === true && isPerm === true) {
         return <Outlet />;
-      } else {
+      }
+      else {
         return <Navigate to="/401" />;
       }
     }
@@ -85,28 +90,36 @@ const Router = () => {
               <Routes>
                 <Route path="401" element={<NotAuthorizedScreen />} />
                 <Route path="404" element={<NotFoundScreen />} />
+                <Route
+                    path="/prueba-carga"
+                    element={<UploadController />}
+                  />
                 {/* <Route
                           path="/"
                           element={<ProtectedRoute />}
                         > */}
+                <Route path="/login" element={<LoginController />} />
+                <Route element={<AppLayout />}>
+
                 <Route path="/" element={<MainController />} />
-                <Route path="/ingest" element={<IngestController />} />
+                <Route path="/dashboard" element={<IngestController />} />
                 <Route
-                  path="/ingest/:envId"
+                  path="/dashboard/:envId"
                   element={<BucketListController />}
                 />
                 <Route
-                  path="/ingest/:envId/:bucketName/products"
+                  path="/dashboard/:envId/:bucketName/products"
                   element={<ProductListController />}
                 />
                 <Route
-                  path="/ingest/:envId/:bucketName/:productName/folders"
+                  path="/dashboard/:envId/:bucketName/:productName/folders"
                   element={<FolderListController />}
                 />
                 <Route
-                  path="/ingest/:envId/:bucketName/:productName/:tableName/preview"
+                  path="/dashboard/:envId/:bucketName/:productName/:tableName/preview"
                   element={<PreviewController />}
                 />
+                </Route>
                 {/* </Route> */}
                 <Route path="/logout" element={<Logout />} />
                 <Route path="*" element={<NotFoundRedirectRoute />} />
@@ -129,6 +142,6 @@ const Router = () => {
     </ThemeProvider>
     // </MsalProvider>
   );
-};
+}
 
 export default Router;

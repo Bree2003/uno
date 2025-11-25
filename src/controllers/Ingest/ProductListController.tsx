@@ -82,8 +82,8 @@ const ProductListController = () => {
   // 5. Navegación al siguiente paso (Carpetas/Tablas)
   const handleSelectProduct = (productName: string) => {
     // Navegamos a la siguiente vista: Lista de carpetas dentro del producto
-    // Ruta sugerida: /ingest/sap/bucket-raw/producto-x/folders
-    navigate(`/ingest/${envId}/${bucketName}/${productName}/folders`);
+    // Ruta sugerida: /sap/bucket-raw/producto-x/folders
+    navigate(`/dashboard/${envId}/${bucketName}/${productName}/folders`);
   };
 
   const handleBack = () => navigate(-1);
